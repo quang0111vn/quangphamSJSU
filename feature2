@@ -1,0 +1,84 @@
+import os
+import openai
+import streamlit as st
+from openai import OpenAI
+
+OPENAI_API_KEY=("your_open_api_key_here")
+
+client = OpenAI()
+
+
+# Sample data: water quality standards by zipcode (dictionary format for simplicity)
+# This data would ideally come from a database or an external API in a production setting
+WATER_QUALITY_STANDARDS = {
+    "12345": {
+        "pH": (6.5, 8.5),  # acceptable pH range
+        "temperature": (0, 25),  # acceptable temperature range in °C
+        "turbidity": (0, 5),  # acceptable turbidity in NTU
+        "dissolved_oxygen": (5, 14),  # acceptable dissolved oxygen in mg/L
+        "conductivity": (50, 500)  # acceptable conductivity in µS/cm
+    },
+    # Add additional zipcodes with their specific standards here
+    "54321": {
+        "pH": (6.0, 9.0),
+        "temperature": (0, 20),
+        "turbidity": (0, 3),
+        "dissolved_oxygen": (6, 12),
+        "conductivity": (30, 450)
+    }
+}
+# Function to check if each parameter is within the safe range for the given zipcode
+def check_parameters(zipcode, values):
+    standards = WATER_QUALITY_STANDARDS.get(zipcode)
+    if not standards:
+        return None, "No standards available for this zipcode."
+    
+    results = {}
+    for param, value in values.items():
+        if param in standards:
+            min_val, max_val = standards[param]
+            results[param] = "PASS" if min_val <= value <= max_val else "NOT PASS"
+        else:
+            results[param] = "N/A"  # Parameter not found in standards
+
+    return results, standards
+
+# Streamlit UI
+st.title("Water Quality Standards Checker")
+st.write("Enter the water quality parameters and zipcode to check if values meet approved standards.")
+
+# Input for zipcode
+zipcode = st.text_input("Enter the area zipcode:")
+
+# Input for water quality parameters
+pH = st.number_input("Enter the pH value:", step=0.1)
+temperature = st.number_input("Enter the Temperature (°C):", step=0.1)
+turbidity = st.number_input("Enter the Turbidity (NTU):", step=0.1)
+dissolved_oxygen = st.number_input("Enter the Dissolved Oxygen (mg/L):", step=0.1)
+conductivity = st.number_input("Enter the Conductivity (µS/cm):", step=0.1)
+
+# Check button
+if st.button("Check Quality"):
+    values = {
+        "pH": pH,
+        "temperature": temperature,
+        "turbidity": turbidity,
+        "dissolved_oxygen": dissolved_oxygen,
+        "conductivity": conductivity
+    }
+    results, standards = check_parameters(zipcode, values)
+    
+    if results is None:
+        st.write(standards)  # Display error if zipcode not found
+    else:
+        st.subheader("Check Results:")
+        for param, result in results.items():
+            st.write(f"{param.capitalize()}: {result}")
+        
+        st.subheader("County Standards:")
+        #st.write(standards)
+        for param, (min_val, max_val) in standards.items():
+            st.write(f"{param.capitalize()}: {min_val} - {max_val}")
+
+# Display an image of standards (optional placeholder if standards image is available)
+#st.image("standards_image.jpg", caption="Water Quality Standards", use_column_width=True)        

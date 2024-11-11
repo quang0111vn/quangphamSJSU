@@ -1,0 +1,101 @@
+# Install Streamlit if not already installed
+# pip install streamlit
+
+import streamlit as st
+import pandas as pd
+from PIL import Image
+import requests
+
+# Define water quality standards for reference
+standards_data = {
+    "Category": ["Physical", "Physical", "Physical", "Physical",
+                 "Chemical", "Chemical", "Chemical", "Chemical", "Chemical",
+                 "Bacteriological", "Bacteriological"],
+    "Parameter": ["Color", "Turbidity", "Odor and Taste", "pH",
+                  "Arsenic", "Lead", "Nitrate (as NO3-)", "Fluoride", "Total Dissolved Solids",
+                  "Total Coliform Bacteria", "E. coli"],
+    "Standard": ["15 TCU", "5 NTU", "Acceptable", "6.5 – 8.5",
+                 "0.01 mg/L", "0.015 mg/L", "45 mg/L", "2.0 mg/L", "1000 mg/L",
+                 "Not detectable in 100 mL", "Not detectable in 100 mL"],
+    "Source": ["FAO", "FAO", "FAO", "FAO",
+               "California Water Boards", "California Water Boards", "California Water Boards", 
+               "California Water Boards", "California Water Boards", 
+               "FAO", "FAO"]
+}
+
+# Convert standards data to DataFrame
+standards_df = pd.DataFrame(standards_data)
+
+# Streamlit app
+st.title("Drinking Water Quality Input and Standards Table")
+
+# Create a form for input
+with st.form("water_quality_form"):
+    st.header("Input Current Water Quality Values")
+    
+    # Initialize an empty list to hold current values
+    current_values = []
+    
+    # Loop through each parameter to allow input
+    for index, row in standards_df.iterrows():
+        parameter = row["Parameter"]
+        category = row["Category"]
+        
+        # Input current value for each parameter
+        current_value = st.text_input(f"Enter current value for {parameter} ({category}):")
+        
+        # Append current value to list
+        current_values.append(current_value)
+    
+    # Submit button
+    submitted = st.form_submit_button("Submit")
+
+# Display table if form is submitted
+if submitted:
+    # Add current values to DataFrame
+    standards_df["Current"] = current_values
+    # Make the header row bold using markdown
+    st.markdown("### Water Quality Standards Table")
+        
+    # Function to make the first row bold
+    def highlight_first_row(row):
+        return ['font-weight: bold'] * len(row) if row.name == 0 else [''] * len(row)
+
+    # Apply the styling to the DataFrame
+    styled_df = standards_df.style.apply(highlight_first_row, axis=0)
+
+    # Streamlit app to display the table
+    #st.title("Water Quality Standards Table")
+
+    # Display the styled DataFrame
+    st.write(styled_df.to_html(), unsafe_allow_html=True)
+    
+# Display information
+st.markdown("### Source Information")
+
+# Button to open FAO website
+if st.button("More about FAO"):
+    # Open FAO website in a new tab
+    st.markdown("[Visit FAO Website](https://www.fao.org)", unsafe_allow_html=True)
+# Button to open California Water Boards website
+if st.button("More about California Water Boards"):
+    # Display link to California Water Boards website
+    st.markdown("[Visit California Water Boards Website](https://www.waterboards.ca.gov)", unsafe_allow_html=True)
+
+# Function to load an image from a file path
+def load_image(image_path):
+    return Image.open(image_path)
+# Main function to run the streamlit app
+def main():
+    st.title("DIY Drinking Water Testing Kit")
+    st.write("This is a sample image of a DIY Drinking Water Testing Kit.")
+
+    # Load an image (Replace 'sample_image.jpg' with the path to your image)
+    image_path = "images\sample_image.jpg"
+    image = load_image(image_path)
+
+    # Display the image
+    st.image(image, caption='DIY Drinking Water Testing Kit', use_column_width=True)
+
+if __name__ == "__main__":
+    main()  
